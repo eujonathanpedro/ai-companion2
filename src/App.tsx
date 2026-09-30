@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import type { FormEvent, KeyboardEvent } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from './lib/supabase'
 
@@ -53,6 +54,11 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin')
+  const [authLoading, setAuthLoading] = useState(false)
+  const [authNotice, setAuthNotice] = useState('')
 
   const activeThread = useMemo(
     () => threads.find((thread) => thread.id === activeThreadId),
@@ -134,6 +140,72 @@ function App() {
 
     loadMessages()
   }, [activeThreadId])
+
+  const handleAuth = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!supabase || authLoading) return
+
+    const cleanEmail = email.trim()
+    if (!cleanEmail || !password) {
+      setError('Informe e-mail e senha para continuar.')
+      return
+    }
+
+    setAuthLoading(true)
+    setError('')
+    setAuthNotice('')
+
+    if (authMode === 'signup') {
+      if (password.length < 6) {
+        setError('A senha precisa ter pelo menos 6 caracteres.')
+        setAuthLoading(false)
+        return
+      }
+
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: cleanEmail,
+        password,
+      })
+
+      if (signUpError) {
+        setError(signUpError.message)
+      } else if (!data.session) {
+        setAuthNotice('Conta criada. Confirme seu e-mail para acessar a Luma.')
+        setPassword('')
+      }
+
+      setAuthLoading(false)
+      return
+    }
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: cleanEmail,
+      password,
+    })
+
+    if (signInError) setError(signInError.message)
+    else setPassword('')
+
+    setAuthLoading(false)
+  }
+
+  const handleSignOut = async () => {
+    if (!supabase) return
+    await supabase.auth.signOut()
+    setThreads([])
+    setMessages([])
+    setActiveThreadId(null)
+    setPassword('')
+    setError('')
+    setAuthNotice('')
+    setAuthMode('signin')
+  }
+
+  const switchAuthMode = (mode: 'signin' | 'signup') => {
+    setAuthMode(mode)
+    setError('')
+    setAuthNotice('')
+  }
 
   const createThread = async () => {
     if (!supabase || !user) return null
@@ -242,7 +314,7 @@ function App() {
     setSending(false)
   }
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault()
       sendMessage()
@@ -277,13 +349,13 @@ function App() {
               <a href="#como-funciona" className="transition hover:text-foreground">Como funciona</a>
               <a href="#privacidade" className="transition hover:text-foreground">Privacidade</a>
             </nav>
-            <a href="#como-funciona" className="rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-xs font-semibold text-primary transition hover:bg-primary/20">
-              Explorar a Luma
+            <a href="#entrar" className="rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-xs font-semibold text-primary transition hover:bg-primary/20">
+              Entrar
             </a>
           </div>
         </header>
 
-        <section className="relative isolate">
+        <section id="inicio" className="relative isolate">
           <div className="pointer-events-none absolute -left-32 top-12 -z-10 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
           <div className="pointer-events-none absolute -right-32 top-24 -z-10 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
           <div className="mx-auto grid max-w-7xl items-center gap-14 px-6 py-20 sm:py-28 lg:grid-cols-[1.05fr_0.95fr] lg:px-10 lg:py-32">
@@ -299,15 +371,20 @@ function App() {
                 Luma é seu AI companion para conversas acolhedoras, reflexões sinceras e pequenos momentos de clareza no seu dia.
               </p>
               <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <button
-                  onClick={() => document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' })}
+                <a
+                  href="#entrar"
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition hover:-translate-y-0.5 hover:opacity-90"
                 >
-                  Conhecer a Luma <span aria-hidden="true">→</span>
+                  Começar agora <span aria-hidden="true">→</span>
+                </a>
+                <button
+                  onClick={() => document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-border px-6 py-3.5 text-sm font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                >
+                  Como funciona
                 </button>
-                <span className="text-center text-xs text-muted-foreground sm:text-left">Privado, pessoal e sempre disponível</span>
               </div>
-              {error && <p className="mt-6 max-w-md rounded-xl bg-red-400/10 px-4 py-3 text-sm text-red-300">{error}</p>}
+              <p className="mt-5 text-xs text-muted-foreground">Privado, pessoal e sempre disponível</p>
             </div>
 
             <div className="relative mx-auto w-full max-w-md lg:mr-0">
@@ -372,6 +449,119 @@ function App() {
           </div>
         </section>
 
+        <section id="entrar" className="border-t border-border/70">
+          <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 py-20 lg:grid-cols-[1fr_0.9fr] lg:px-10 lg:py-24">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Seu espaço pessoal</p>
+              <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">Comece sua primeira conversa com a Luma.</h2>
+              <p className="mt-4 max-w-lg text-base leading-7 text-muted-foreground">
+                Crie sua conta em segundos. Suas conversas ficam salvas no seu espaço e você continua de onde parou quando quiser.
+              </p>
+              <ul id="privacidade" className="mt-8 space-y-3 text-sm text-muted-foreground">
+                <li className="flex items-center gap-3">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15 text-xs text-primary">✓</span>
+                  Conversas salvas automaticamente
+                </li>
+                <li className="flex items-center gap-3">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15 text-xs text-primary">✓</span>
+                  Histórico sempre à mão, só para você
+                </li>
+                <li className="flex items-center gap-3">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15 text-xs text-primary">✓</span>
+                  Você no controle do seu conteúdo
+                </li>
+              </ul>
+            </div>
+
+            <div className="rounded-3xl border border-border bg-muted/20 p-6 shadow-2xl shadow-black/20 sm:p-8">
+              <div className="mb-6 flex rounded-xl border border-border bg-background/60 p-1 text-sm">
+                <button
+                  type="button"
+                  onClick={() => switchAuthMode('signin')}
+                  className={`flex-1 rounded-lg px-4 py-2 font-medium transition ${authMode === 'signin' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  Entrar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => switchAuthMode('signup')}
+                  className={`flex-1 rounded-lg px-4 py-2 font-medium transition ${authMode === 'signup' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  Criar conta
+                </button>
+              </div>
+
+              <h3 className="text-lg font-semibold">
+                {authMode === 'signin' ? 'Bem-vindo de volta' : 'Sua conta na Luma'}
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {authMode === 'signin'
+                  ? 'Entre para continuar suas conversas.'
+                  : 'Leva menos de um minuto para começar.'}
+              </p>
+
+              <form onSubmit={handleAuth} className="mt-6 space-y-4">
+                <div>
+                  <label htmlFor="email" className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    E-mail
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="voce@email.com"
+                    className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary/60"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="password" className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Senha
+                  </label>
+                  <input
+                    id="password"
+                    type="password"
+                    autoComplete={authMode === 'signin' ? 'current-password' : 'new-password'}
+                    required
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="Mínimo de 6 caracteres"
+                    className="mt-2 w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary/60"
+                  />
+                </div>
+
+                {error && <p className="rounded-xl bg-red-400/10 px-4 py-3 text-sm text-red-300">{error}</p>}
+                {authNotice && <p className="rounded-xl bg-primary/10 px-4 py-3 text-sm text-primary">{authNotice}</p>}
+
+                <button
+                  type="submit"
+                  disabled={authLoading}
+                  className="w-full rounded-xl bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {authLoading
+                    ? 'Aguarde...'
+                    : authMode === 'signin'
+                      ? 'Entrar na Luma'
+                      : 'Criar minha conta'}
+                </button>
+              </form>
+
+              <p className="mt-5 text-center text-xs text-muted-foreground">
+                {authMode === 'signin' ? 'Ainda não tem conta?' : 'Já tem uma conta?'}{' '}
+                <button
+                  type="button"
+                  onClick={() => switchAuthMode(authMode === 'signin' ? 'signup' : 'signin')}
+                  className="font-semibold text-primary transition hover:opacity-80"
+                >
+                  {authMode === 'signin' ? 'Criar agora' : 'Entrar'}
+                </button>
+              </p>
+            </div>
+          </div>
+        </section>
+
         <footer className="border-t border-border/70 px-6 py-8 lg:px-10">
           <div className="mx-auto flex max-w-7xl flex-col gap-2 text-center text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:text-left">
             <span>Seu espaço começa com uma conversa.</span>
@@ -427,11 +617,17 @@ function App() {
               <p className="truncate text-xs text-muted-foreground">{user.email}</p>
             </div>
           </div>
+          <button
+            onClick={handleSignOut}
+            className="mt-3 w-full rounded-xl border border-border px-4 py-2.5 text-xs font-semibold text-muted-foreground transition hover:bg-muted hover:text-foreground"
+          >
+            Sair da conta
+          </button>
         </div>
       </aside>
 
       <section className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-border px-5 py-4 sm:px-8">
+        <header className="flex items-center justify-between gap-3 border-b border-border px-5 py-4 sm:px-8">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary md:hidden">✦</div>
             <div>
@@ -439,7 +635,10 @@ function App() {
               <p className="text-xs text-muted-foreground">Sempre aqui para você</p>
             </div>
           </div>
-          <button onClick={createThread} className="rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground md:hidden">+ Nova</button>
+          <div className="flex items-center gap-2">
+            <button onClick={createThread} className="rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground md:hidden">+ Nova</button>
+            <button onClick={handleSignOut} className="rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground">Sair</button>
+          </div>
         </header>
 
         <div className="flex-1 overflow-y-auto px-5 py-8 sm:px-8">
