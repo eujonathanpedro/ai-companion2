@@ -223,15 +223,117 @@ function App() {
 
   if (!user) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-background px-6 text-foreground">
-        <section className="w-full max-w-md rounded-3xl border border-border bg-muted/30 p-8 text-center shadow-2xl shadow-black/20">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15 text-2xl text-primary">✦</div>
-          <h1 className="mt-6 text-2xl font-semibold">Seu companion está esperando</h1>
-          <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            Entre na sua conta para acessar suas conversas e continuar de onde parou.
-          </p>
-          {error && <p className="mt-5 rounded-xl bg-red-400/10 px-4 py-3 text-sm text-red-300">{error}</p>}
+      <main className="min-h-screen overflow-hidden bg-background text-foreground">
+        <header className="relative z-10 border-b border-border/70">
+          <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 lg:px-10">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-xl font-bold text-primary-foreground shadow-lg shadow-primary/20">✦</div>
+              <div>
+                <p className="font-semibold tracking-tight">Luma</p>
+                <p className="text-xs text-muted-foreground">AI companion</p>
+              </div>
+            </div>
+            <span className="hidden rounded-full border border-border bg-muted/30 px-4 py-2 text-xs font-medium text-muted-foreground sm:inline-flex">
+              Seu espaço para estar presente
+            </span>
+          </div>
+        </header>
+
+        <section className="relative isolate">
+          <div className="pointer-events-none absolute -left-32 top-12 -z-10 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
+          <div className="pointer-events-none absolute -right-32 top-24 -z-10 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
+          <div className="mx-auto grid max-w-7xl items-center gap-14 px-6 py-20 sm:py-28 lg:grid-cols-[1.05fr_0.95fr] lg:px-10 lg:py-32">
+            <div>
+              <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-primary">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                Uma conversa que acompanha você
+              </div>
+              <h1 className="max-w-3xl text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
+                Um espaço para pensar, sentir e <span className="text-primary">seguir em frente.</span>
+              </h1>
+              <p className="mt-7 max-w-xl text-lg leading-8 text-muted-foreground sm:text-xl">
+                Luma é seu AI companion para conversas acolhedoras, reflexões sinceras e pequenos momentos de clareza no seu dia.
+              </p>
+              <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <button
+                  onClick={() => document.getElementById('como-funciona')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition hover:-translate-y-0.5 hover:opacity-90"
+                >
+                  Conhecer a Luma <span aria-hidden="true">→</span>
+                </button>
+                <span className="text-center text-xs text-muted-foreground sm:text-left">Privado, pessoal e sempre disponível</span>
+              </div>
+              {error && <p className="mt-6 max-w-md rounded-xl bg-red-400/10 px-4 py-3 text-sm text-red-300">{error}</p>}
+            </div>
+
+            <div className="relative mx-auto w-full max-w-md lg:mr-0">
+              <div className="absolute -inset-5 rounded-[2.5rem] bg-primary/10 blur-2xl" />
+              <div className="relative rounded-[2rem] border border-border bg-muted/30 p-4 shadow-2xl shadow-black/30 backdrop-blur-sm sm:p-5">
+                <div className="rounded-[1.5rem] border border-border/80 bg-background/80 p-5 sm:p-6">
+                  <div className="flex items-center justify-between border-b border-border pb-5">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-xl text-primary">✦</div>
+                      <div>
+                        <p className="text-sm font-semibold">Luma</p>
+                        <p className="text-xs text-muted-foreground">Está aqui com você</p>
+                      </div>
+                    </div>
+                    <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-lg shadow-emerald-400/40" />
+                  </div>
+                  <div className="space-y-5 py-7">
+                    <div className="max-w-[85%] rounded-2xl rounded-bl-md border border-border bg-muted/60 px-4 py-3 text-sm leading-6 text-muted-foreground">
+                      O que está ocupando seus pensamentos hoje?
+                    </div>
+                    <div className="ml-auto max-w-[78%] rounded-2xl rounded-br-md bg-primary px-4 py-3 text-sm leading-6 text-primary-foreground">
+                      Preciso organizar algumas coisas e respirar um pouco.
+                    </div>
+                    <div className="max-w-[88%] rounded-2xl rounded-bl-md border border-border bg-muted/60 px-4 py-3 text-sm leading-6 text-muted-foreground">
+                      Vamos com calma. Podemos começar pelo que parece mais importante agora.
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+                    <span className="flex-1">Escreva uma mensagem...</span>
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-base font-bold text-primary-foreground">↑</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
+
+        <section id="como-funciona" className="border-t border-border/70 bg-muted/10">
+          <div className="mx-auto max-w-7xl px-6 py-20 lg:px-10 lg:py-24">
+            <div className="max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Feito para o seu ritmo</p>
+              <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">Mais do que respostas. Um lugar para você.</h2>
+              <p className="mt-4 text-base leading-7 text-muted-foreground">Tenha conversas que ajudam a transformar pensamentos soltos em próximos passos possíveis.</p>
+            </div>
+            <div className="mt-12 grid gap-5 md:grid-cols-3">
+              <article className="rounded-2xl border border-border bg-background/60 p-6">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-xl text-primary">◌</div>
+                <h3 className="mt-6 text-lg font-semibold">Converse sem julgamentos</h3>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">Coloque para fora o que você está vivendo e encontre um espaço de escuta disponível quando precisar.</p>
+              </article>
+              <article className="rounded-2xl border border-border bg-background/60 p-6">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-xl text-primary">✧</div>
+                <h3 className="mt-6 text-lg font-semibold">Organize suas ideias</h3>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">Retome suas conversas e transforme reflexões em clareza, decisões e pequenas ações.</p>
+              </article>
+              <article className="rounded-2xl border border-border bg-background/60 p-6">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-xl text-primary">⌁</div>
+                <h3 className="mt-6 text-lg font-semibold">Continue de onde parou</h3>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">Cada conversa fica no seu espaço pessoal para que sua jornada tenha continuidade.</p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <footer className="border-t border-border/70 px-6 py-8 lg:px-10">
+          <div className="mx-auto flex max-w-7xl flex-col gap-2 text-center text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:text-left">
+            <span>Seu espaço começa com uma conversa.</span>
+            <span>Luma · AI companion</span>
+          </div>
+        </footer>
       </main>
     )
   }
