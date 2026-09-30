@@ -162,6 +162,7 @@ function App() {
 
     setSending(true)
     setError('')
+    const previousDraft = draft
     let threadId = activeThreadId
     let thread = activeThread
 
@@ -186,6 +187,9 @@ function App() {
       created_at: createdAt,
     }
 
+    setMessages((current) => [...current, message])
+    setDraft('')
+
     const { error: insertError } = await supabase.from('messages').insert({
       id: messageId,
       thread_id: threadId,
@@ -195,42 +199,43 @@ function App() {
     })
 
     if (insertError) {
+      setMessages((current) => current.filter((item) => item.id !== messageId))
+      setDraft(previousDraft)
       setError(insertError.message)
-    } else {
-      setMessages((current) => [...current, message])
-      setDraft('')
+      setSending(false)
+      return
+    }
 
-      if (thread?.title === 'Nova conversa') {
-        const title = text.length > 42 ? `${text.slice(0, 42)}…` : text
-        const { error: updateError } = await supabase
-          .from('threads')
-          .update({ title, updated_at: createdAt })
-          .eq('id', threadId)
+    if (thread?.title === 'Nova conversa') {
+      const title = text.length > 42 ? `${text.slice(0, 42)}…` : text
+      const { error: updateError } = await supabase
+        .from('threads')
+        .update({ title, updated_at: createdAt })
+        .eq('id', threadId)
 
-        if (updateError) {
-          setError(updateError.message)
-        } else {
-          setThreads((current) =>
-            current.map((item) =>
-              item.id === threadId ? { ...item, title, updated_at: createdAt } : item,
-            ),
-          )
-        }
+      if (updateError) {
+        setError(updateError.message)
       } else {
-        const { error: updateError } = await supabase
-          .from('threads')
-          .update({ updated_at: createdAt })
-          .eq('id', threadId)
+        setThreads((current) =>
+          current.map((item) =>
+            item.id === threadId ? { ...item, title, updated_at: createdAt } : item,
+          ),
+        )
+      }
+    } else {
+      const { error: updateError } = await supabase
+        .from('threads')
+        .update({ updated_at: createdAt })
+        .eq('id', threadId)
 
-        if (updateError) {
-          setError(updateError.message)
-        } else {
-          setThreads((current) =>
-            current.map((item) =>
-              item.id === threadId ? { ...item, updated_at: createdAt } : item,
-            ),
-          )
-        }
+      if (updateError) {
+        setError(updateError.message)
+      } else {
+        setThreads((current) =>
+          current.map((item) =>
+            item.id === threadId ? { ...item, updated_at: createdAt } : item,
+          ),
+        )
       }
     }
 
