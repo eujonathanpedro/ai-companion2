@@ -176,27 +176,61 @@ function App() {
       return
     }
 
-    const { data, error: insertError } = await supabase
-      .from('messages')
-      .insert({
-        thread_id: threadId,
-        role: 'user',
-        parts: [{ type: 'text', text }],
-      })
-      .select('id, thread_id, role, parts, created_at')
-      .single()
+    const messageId = crypto.randomUUID()
+    const createdAt = new Date().toISOString()
+    const message: Message = {
+      id: messageId,
+      thread_id: threadId,
+      role: 'user',
+      parts: [{ type: 'text', text }],
+      created_at: createdAt,
+    }
+
+    const { error: insertError } = await supabase.from('messages').insert({
+      id: messageId,
+      thread_id: threadId,
+      role: 'user',
+      parts: message.parts,
+      created_at: createdAt,
+    })
 
     if (insertError) {
       setError(insertError.message)
     } else {
-      setMessages((current) => [...current, data as Message])
+      setMessages((current) => [...current, message])
       setDraft('')
+
       if (thread?.title === 'Nova conversa') {
         const title = text.length > 42 ? `${text.slice(0, 42)}…` : text
-        await supabase.from('threads').update({ title }).eq('id', threadId)
-        setThreads((current) =>
-          current.map((item) => (item.id === threadId ? { ...item, title } : item)),
-        )
+        const { error: updateError } = await supabase
+          .from('threads')
+          .update({ title, updated_at: createdAt })
+          .eq('id', threadId)
+
+        if (updateError) {
+          setError(updateError.message)
+        } else {
+          setThreads((current) =>
+            current.map((item) =>
+              item.id === threadId ? { ...item, title, updated_at: createdAt } : item,
+            ),
+          )
+        }
+      } else {
+        const { error: updateError } = await supabase
+          .from('threads')
+          .update({ updated_at: createdAt })
+          .eq('id', threadId)
+
+        if (updateError) {
+          setError(updateError.message)
+        } else {
+          setThreads((current) =>
+            current.map((item) =>
+              item.id === threadId ? { ...item, updated_at: createdAt } : item,
+            ),
+          )
+        }
       }
     }
 
