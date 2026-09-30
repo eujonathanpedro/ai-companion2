@@ -265,16 +265,21 @@ function App() {
       <main className="min-h-screen overflow-hidden bg-background text-foreground">
         <header className="relative z-10 border-b border-border/70">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5 lg:px-10">
-            <div className="flex items-center gap-3">
+            <a href="#inicio" className="flex items-center gap-3" aria-label="Luma, início">
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-xl font-bold text-primary-foreground shadow-lg shadow-primary/20">✦</div>
               <div>
                 <p className="font-semibold tracking-tight">Luma</p>
                 <p className="text-xs text-muted-foreground">AI companion</p>
               </div>
-            </div>
-            <span className="hidden rounded-full border border-border bg-muted/30 px-4 py-2 text-xs font-medium text-muted-foreground sm:inline-flex">
-              Seu espaço para estar presente
-            </span>
+            </a>
+            <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex" aria-label="Navegação principal">
+              <a href="#inicio" className="transition hover:text-foreground">Início</a>
+              <a href="#como-funciona" className="transition hover:text-foreground">Como funciona</a>
+              <a href="#privacidade" className="transition hover:text-foreground">Privacidade</a>
+            </nav>
+            <a href="#como-funciona" className="rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-xs font-semibold text-primary transition hover:bg-primary/20">
+              Explorar a Luma
+            </a>
           </div>
         </header>
 
